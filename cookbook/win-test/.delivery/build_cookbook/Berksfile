@@ -1,0 +1,7 @@
+source 'https://supermarket.chef.io'
+
+metadata
+
+group :delivery do
+  cookbook 'Node-Attributes', path: './test/fixtures/cookbooks/Node-Attributes'
+end

@@ -1,0 +1,38 @@
+---
+driver:
+  name: ec2
+  region: us-east-1
+  subnet_id: subnet-476ae66a
+  security_group_ids: ["sg-056a2f78"]
+  aws_ssh_key_id: aj-development
+  iam_profile_name: s3accesstoec2
+  tags:
+    Owner: pratiksha.mandale
+    Environment: Testing
+    Project: USTC
+
+transport:
+  ssh_key: /Users/arunsanna/keys/aj-development.pem
+
+provisioner:
+  name: chef_zero
+  install_msi_url: https://packages.chef.io/files/current/chef/13.3.26/windows/2008r2/chef-client-13.3.26-1-x64.msi
+
+verifier:
+  name: inspec
+
+platforms:
+  - name: windows-2008r2
+    driver:
+      instance_type: c4.large
+      spot_price: 0.5
+      tags:
+        Name: dev-USTC-Windows-2008-MS     
+      user_data: ./.user_data_windows.ps1
+    transport:
+      name: winrm      
+ 
+suites:
+  - name: Member_Server
+    run_list:
+      - recipe[win-test::default]

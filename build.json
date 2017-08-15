@@ -1,0 +1,103 @@
+{
+  "variables": {
+    "name": "windows-prebake",
+    "region": "us-east-1",
+    "source_ami": "ami-de9e91c8",
+    "instance_type": "m3.2xlarge",
+    "subnet_id": "subnet-a32a6d8e",
+    "vpc_id": "vpc-80ab27e6",
+    "sg_id" : "sg-806bcbfc",
+    "winrm_username": "Administrator",
+    "e_user" : "packer",
+    "e_pass" : "P@ssw0rd",
+    "service": "golden-image",
+    "project": "ustc",
+    "environment": "development",
+    "expiry_date": "2017-08-30",
+    "owner": "arun.sanna",
+    "need_public_ip" : "true",
+    "build_url": "Unknown"
+  },
+  "builders": [
+    {
+      "name": "{{user `name`}}",
+      "type": "amazon-ebs",
+      "ami_name": "{{user `name`}} {{timestamp | clean_ami_name}}",
+      "region": "us-east-1",
+      "source_ami": "{{user `source_ami`}}",
+      "user_data_file": "scripts/userdata.txt",
+      "instance_type": "{{user `instance_type`}}",
+      "associate_public_ip_address": "{{user `need_public_ip`}}",
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}",
+      "security_group_id": "{{user `sg_id`}}",
+      "communicator": "winrm",
+      "winrm_username": "Administrator",
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "delete_on_termination": true,
+          "volume_size": 200,
+          "volume_type": "gp2"
+        }
+      ],
+      "run_tags": {
+        "Name": "Packer-Builder-{{user `name`}}",
+        "Project": "{{user `project`}}",
+        "Environment": "{{user `environment`}}",
+        "Owner": "{{user `owner`}}",
+        "ExpirationDate": "{{user `expiry_date`}}",
+        "BuildUrl": "{{user `build_url`}}"
+      },
+      "tags": {
+        "Name": "{{user `name`}} {{timestamp | clean_ami_name}}",
+        "Project": "{{user `project`}}",
+        "Environment": "{{user `environment`}}",
+        "Owner": "{{user `owner`}}",
+        "BuildUrl": "{{user `build_url`}}"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "inline": [
+        "choco install kb2842230 -y -v",
+        "Write-Host $(whoami)"
+      ],
+      "elevated_user": "{{user `e_user`}}",
+      "elevated_password": "{{user `e_pass`}}"
+    },
+    {
+      "type": "windows-restart"
+    },
+    {
+    	"type": "chef-solo",
+        "install_command" : "powershell.exe -Command (New-Object System.Net.WebClient).DownloadFile('https://packages.chef.io/files/current/chef/13.3.36/windows/2008r2/chef-client-13.3.36-1-x64.msi', 'C:\\Windows\\Temp\\chef.msi');Start-Process 'msiexec' -ArgumentList '/qb /i C:\\Windows\\Temp\\chef.msi' -NoNewWindow -Wait",
+    	"guest_os_type" : "windows",
+		"cookbook_paths": [ "cookbook" ],
+		"run_list": [ "win-test" ]
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "NET USER packer /DELETE"
+      ]
+    },
+    {
+      "type": "powershell",
+      "scripts": [
+        "scripts/enableUserData.ps1",
+        "scripts/enableSetPassword.ps1"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "json-updater",
+      "ami_id": {
+        "target/artifact.json": ["ami_id"]
+      }
+    }
+  ]
+}
