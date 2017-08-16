@@ -7,7 +7,7 @@ driver:
   aws_ssh_key_id: aj-development
   iam_profile_name: s3accesstoec2
   tags:
-    Owner: pratiksha.mandale
+    Owner: arun.sanna
     Environment: Testing
     Project: USTC
 

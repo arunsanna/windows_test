@@ -1,0 +1,2 @@
+source 'https://supermarket.chef.io'
+cookbook 'windows', '~> 3.1.2'

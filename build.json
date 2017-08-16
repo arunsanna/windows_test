@@ -60,10 +60,23 @@
   ],
   "provisioners": [
     {
+      "type": "windows-restart"
+    },
+    {
       "type": "powershell",
       "inline": [
-        "choco install kb2842230 -y -v",
-        "Write-Host $(whoami)"
+        "iex((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
+      ],
+      "elevated_user": "{{user `e_user`}}",
+      "elevated_password": "{{user `e_pass`}}"
+    },
+    {
+      "type": "windows-restart"
+    },
+    {
+      "type": "powershell",
+      "inline": [
+        "choco install kb2842230 -y -v"
       ],
       "elevated_user": "{{user `e_user`}}",
       "elevated_password": "{{user `e_pass`}}"

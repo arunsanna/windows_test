@@ -21,19 +21,27 @@ cmd.exe /c reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal
 # WinRM
 write-output "Setting up WinRM"
 
-&winrm quickconfig `-q
-&winrm set winrm/config '@{MaxTimeoutms="1800000"}'
-&winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
-&winrm set winrm/config/client/auth '@{Basic="true"}'
-&winrm set winrm/config/service/auth '@{Basic="true"}'
-&winrm set winrm/config/client '@{AllowUnencrypted="true"}'
-&winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+winrm quickconfig -q
+winrm quickconfig '-transport:http'
+winrm set winrm/config/winrs '@{MaxProcessesPerShell="15"}'
+winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="4096"}'
+winrm set winrm/config '@{MaxTimeoutms="1800000"}'
+winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+winrm set winrm/config/client/auth '@{Basic="true"}'
+winrm set winrm/config/service/auth '@{Basic="true"}'
+winrm set winrm/config/service/auth '@{CredSSP="true"}'
+winrm set winrm/config/listener?Address=*+Transport=HTTP '@{Port="5985"}'
 
-# Firewall
-write-output "Setting up Firewall"
+netsh advfirewall firewall add rule name="WinRM 5985" protocol=TCP dir=in localport=5985 action=allow
+netsh advfirewall firewall add rule name="WinRM 5986" protocol=TCP dir=in localport=5986 action=allow
+netsh advfirewall firewall add rule name="SMB 445 TCP" protocol=TCP dir=in localport=445 action=allow
+netsh advfirewall firewall add rule name="SMB 445 UDP" protocol=UDP dir=in localport=445 action=allow
 
-cmd.exe /c netsh advfirewall firewall set rule group="remote administration" new enable=yes
-cmd.exe /c netsh firewall add portopening TCP 5985 "Port 5985"
+
+#disable UAC
+cmd.exe /c C:\Windows\System32\reg.exe ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f
+cmd.exe /k C:\Windows\System32\reg.exe ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f
+C:\Windows\System32\regedt32.exe 'ADD HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System /v EnableLUA /t REG_DWORD /d 0 /f'
 
 write-output "Finished"
 </powershell>
