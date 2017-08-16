@@ -1,5 +1,2 @@
-powershell_script 'Audit-101' do
-  code <<-EOH
-    AuditPol /Set /Subcategory:"Credential Validation" /success:enable
-  EOH
-end
+include_recipe "win-test::100"
+include_recipe "win-test::200"
